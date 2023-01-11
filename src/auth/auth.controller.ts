@@ -3,25 +3,26 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  HttpStatus,
   Param,
   Post,
   Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { user } from '@prisma/client';
+import { Response } from 'express';
 import { diskStorage } from 'multer';
 import { AuthService } from './auth.service';
-import { userLogin } from './dto';
+import { resultUpload, token, userLogin } from './dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authSerivice: AuthService) {}
+  constructor(private authService: AuthService) {}
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -34,44 +35,40 @@ export class AuthController {
     }),
   )
   @Post('/upload/:id')
-  async upload(@UploadedFile() file, @Req() req) {
-    const fs = require('fs');
+  upload(
+    @UploadedFile() file,
+    @Req() req,
+    @Param('id') id: string,
+  ): Promise<resultUpload> {
     const Url = req.protocol + '://' + req.get('host') + '/auth/avatar/';
-    const { id } = req.params;
-    const fullUrl = Url + file.filename;
-    const link = process.cwd() + '/public/avatar/' + file.filename;
-    const data = await this.authSerivice.uploadAvatar(Number(id), fullUrl);
-
-    if (data.result) {
-      let { oldAvatar } = data;
-      oldAvatar = oldAvatar.replace(Url, '');
-      const remove = process.cwd() + '/public/avatar/' + oldAvatar;
-      setTimeout(() => {
-        fs.unlink(remove, () => null);
-      }, 3000);
-      return { avatar: fullUrl, message: 'success' };
-    } else {
-      fs.unlinkSync(link);
-      throw new HttpException('Failed', HttpStatus.BAD_REQUEST);
-
-    }
+    const fileName: string = file.filename;
+    return this.authService.uploadAvatar(Number(id), Url, fileName);
   }
   @Get('/user')
   getUser(): Promise<user[]> {
-    return this.authSerivice.getUser();
+    return this.authService.getUser();
   }
   @Post('/login')
-  async login(@Body() body: userLogin): Promise<any> {
+  login(@Body() body: userLogin): Promise<user & token> {
     const { email, passWord } = body;
-
-    let check = await this.authSerivice.login(email, passWord);
-    return check;
+    return this.authService.login(email, passWord);
   }
   @Post('/sign')
-  async signUp(@Body() body: user) {
-    let message = await this.authSerivice.signUp(body);
-    return message;
+  signUp(@Body() body: user): Promise<user> {
+    return this.authService.signUp(body);
   }
-  @Delete('/delete/:id')
-  deleteUser() {}
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/user/:id')
+  deleteUser(@Param('id') id: string): Promise<any> {
+    return this.authService.deleteUser(id);
+  }
+  // @UseGuards(AuthGuard('jwt'))
+  // @Get('/check')
+  // check() {
+  //   return 'hello';
+  // }
+  @Get('/avatar/:fileName')
+  showAvatar(@Param('fileName') fileName: string, @Res() res: Response) {
+    return this.authService.avatar(fileName, res);
+  }
 }

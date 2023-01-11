@@ -18,3 +18,50 @@ model user {
   role      Boolean
   avatar    String?   @db.VarChar(255)
 }
+
+model imageRoom {
+  roomID  Int
+  imageID Int    @id @default(autoincrement())
+  url     String @db.VarChar(255)
+  room    room   @relation(fields: [roomID], references: [roomID], onDelete: NoAction, onUpdate: NoAction, map: "imageRoom_ibfk_1")
+
+  @@index([roomID], map: "roomID")
+}
+
+model room {
+  roomID       Int         @id @default(autoincrement())
+  positionID   Int
+  name         String      @db.VarChar(255)
+  guest        Int
+  bedroom      Int
+  bed          Int
+  bath         Int
+  description  String      @db.VarChar(255)
+  price        Int
+  air          Boolean?    @default(false)
+  iron         Boolean?    @default(false)
+  tv           Boolean?    @default(false)
+  wifi         Boolean?    @default(false)
+  kitchen      Boolean?    @default(false)
+  park         Boolean?    @default(false)
+  coffe        Boolean?    @default(false)
+  refrigerator Boolean?    @default(false)
+  address      String      @db.VarChar(255)
+  hostName     String      @db.VarChar(255)
+  phone        Int
+  lng          Float?      @db.Float
+  lat          Float?      @db.Float
+  imageRoom    imageRoom[]
+  position     position    @relation(fields: [positionID], references: [positionID], onDelete: NoAction, onUpdate: NoAction, map: "room_ibfk_1")
+
+  @@index([positionID], map: "positionID")
+}
+
+model position {
+  positionID Int    @id @default(autoincrement())
+  cityName   String @db.VarChar(255)
+  image      String @db.VarChar(255)
+  lng        Float? @db.Float
+  lat        Float? @db.Float
+  room       room[]
+}

@@ -58,10 +58,12 @@ model room {
 }
 
 model position {
-  positionID Int    @id @default(autoincrement())
-  cityName   String @db.VarChar(255)
-  image      String @db.VarChar(255)
-  lng        Float? @db.Float
-  lat        Float? @db.Float
+  positionID Int     @id @default(autoincrement())
+  name       String  @db.VarChar(255)
+  city       String  @db.VarChar(255)
+  country    String  @db.VarChar(255)
+  image      String? @db.VarChar(255)
+  lng        Float?  @db.Float
+  lat        Float?  @db.Float
   room       room[]
 }

@@ -39,7 +39,7 @@ export class RoomController {
     return this.roomService.uploadImage(Number(id), Url, data);
   }
   @Get()
-  getData() {
+  getData(): Promise<room[]> {
     return this.roomService.getAllRoom();
   }
   @Get('/:id')

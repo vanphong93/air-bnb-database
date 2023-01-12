@@ -7,13 +7,17 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, room } from '@prisma/client';
-import { dataRequire, roomProperty } from 'src/utilities/validation';
+import {
+  checkEmpty,
+  dataRequire,
+  roomProperty,
+} from 'src/utilities/validation';
 
 @Injectable()
 export class RoomService {
   constructor(private config: ConfigService, private jwt: JwtService) {}
   private prisma: PrismaClient = new PrismaClient();
-  async getAllRoom() {
+  async getAllRoom(): Promise<room[]> {
     const result = await this.prisma.room.findMany({
       include: { imageRoom: { select: { url: true } } },
     });
@@ -34,7 +38,7 @@ export class RoomService {
     return result;
   }
   async createRoom(body: room): Promise<room> {
-    if (!dataRequire(body, roomProperty)) {
+    if (dataRequire(body, roomProperty) || checkEmpty(body)) {
       throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
     }
     const result = await this.prisma.room

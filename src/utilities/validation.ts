@@ -16,8 +16,16 @@ export function dataRequire(object: Object, property: Array<string>): boolean {
   for (let index = 0; index < property.length; index++) {
     const element = property[index];
     if (!object.hasOwnProperty(element)) {
-      return false;
+      return true;
     }
   }
-  return true;
+  return false;
+}
+export function checkEmpty(object: Object): boolean {
+  for (const key in object) {
+    if (!object[key]) {
+      return true;
+    }
+  }
+  return false;
 }

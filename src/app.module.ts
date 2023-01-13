@@ -7,7 +7,12 @@ import { RoomModule } from './room/room.module';
 import { PositionModule } from './position/position.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, RoomModule, PositionModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    RoomModule,
+    PositionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

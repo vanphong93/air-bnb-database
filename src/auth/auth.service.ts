@@ -28,13 +28,11 @@ export class AuthService {
       return data;
     });
     return result;
-    // return await this.prisma.user.findMany();
   }
-  async login(email: string, passWord: string): Promise<user & token> {
+  async login({ email, passWord }: userLogin): Promise<user & token> {
     const checkUser = await this.prisma.user.findFirst({
       where: { email },
     });
-
     if (checkUser) {
       if (checkUser.passWord === passWord) {
         const token = this.jwt.sign(checkUser, {
@@ -57,17 +55,18 @@ export class AuthService {
     if (checkEmail) {
       throw new ConflictException(email, 'email is already exists');
     }
-    if (dataRequire(body, signProperty) || checkEmpty(body)) {
-      throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
-    }
-    const clientData = await this.prisma.user
-      .create({ data: body })
-      .then((data) => {
-        return { ...data };
-      })
-      .catch(() => {
-        throw new InternalServerErrorException();
-      });
+
+    const clientData = await this.prisma.user.create({ data: body });
+    // .then((data) => {
+    //   return { ...data };
+    // })
+    // .catch((data) => {
+    //   console.log('data: ', data);
+
+    //   return data;
+    //   // console.log('err: ', err);
+    //   // throw new InternalServerErrorException();
+    // });
 
     return clientData;
   }
@@ -144,7 +143,7 @@ export class AuthService {
   async uploadAvatar(
     id: number,
     url: string,
-    fileName: string,
+    fileName: string
   ): Promise<resultUpload> {
     const fs = require('fs');
     const fullUrl = url + fileName;

@@ -11,11 +11,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
 import { position } from '@prisma/client';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
 import { PositionService } from './position.service';
-
+@ApiTags('Position')
 @Controller('position')
 export class PositionController {
   constructor(private positionService: PositionService) {}

@@ -15,10 +15,19 @@ import {
   FileFieldsInterceptor,
   FileInterceptor,
 } from '@nestjs/platform-express';
+import {
+  ApiBasicAuth,
+  ApiExcludeController,
+  ApiExcludeEndpoint,
+  ApiHideProperty,
+  ApiOAuth2,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { room } from '@prisma/client';
 import { diskStorage } from 'multer';
 import { RoomService } from './room.service';
-
+@ApiTags('Room')
 @Controller('room')
 export class RoomController {
   constructor(private roomService: RoomService) {}
@@ -56,7 +65,9 @@ export class RoomController {
     let splitURL = req.protocol + '://' + req.get('host') + '/room/img/';
     return this.roomService.deleteImg(Number(id), splitURL);
   }
+
   @Get('/image/:fileName')
+  @ApiExcludeEndpoint()
   showImg(@Param('fileName') fileName: string, @Res() res) {
     return this.roomService.imageRoom(fileName, res);
   }

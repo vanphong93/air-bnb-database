@@ -15,7 +15,7 @@ model user {
   phone     Int?
   birthDate DateTime? @db.Date
   gender    Boolean?
-  role      Boolean
+  role      Boolean?  @default(false)
   avatar    String?   @db.VarChar(255)
 }
 

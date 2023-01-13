@@ -38,17 +38,16 @@ export class RoomService {
     return result;
   }
   async createRoom(body: room): Promise<room> {
-    if (dataRequire(body, roomProperty) || checkEmpty(body)) {
+    if (dataRequire(body, roomProperty)) {
       throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
     }
-    const result = await this.prisma.room
-      .create({ data: body })
-      .then((data) => {
-        return { ...data };
-      })
-      .catch(() => {
-        throw new InternalServerErrorException();
-      });
+    const result = await this.prisma.room.create({ data: body });
+    // .then((data) => {
+    //   return { ...data };
+    // })
+    // .catch(() => {
+    //   throw new InternalServerErrorException();
+    // });
     return result;
   }
   async uploadImage(id: number, url: string, data) {

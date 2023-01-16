@@ -32,12 +32,8 @@ model room {
   roomID       Int         @id @default(autoincrement())
   positionID   Int
   name         String      @db.VarChar(255)
-  guest        Int
-  bedroom      Int
-  bed          Int
   bath         Int
   description  String      @db.VarChar(255)
-  price        Int
   air          Boolean?    @default(false)
   iron         Boolean?    @default(false)
   tv           Boolean?    @default(false)
@@ -51,6 +47,7 @@ model room {
   phone        Int
   lng          Float?      @db.Float
   lat          Float?      @db.Float
+  bedRoom      bedRoom[]
   imageRoom    imageRoom[]
   position     position    @relation(fields: [positionID], references: [positionID], onDelete: NoAction, onUpdate: NoAction, map: "room_ibfk_1")
 
@@ -66,4 +63,16 @@ model position {
   lng        Float?  @db.Float
   lat        Float?  @db.Float
   room       room[]
+}
+
+model bedRoom {
+  bedID    Int     @id @default(autoincrement())
+  roomID   Int?
+  imageBed String? @db.VarChar(255)
+  guest    Int
+  bed      Int
+  price    Int
+  room     room?   @relation(fields: [roomID], references: [roomID], onDelete: NoAction, onUpdate: NoAction, map: "bedRoom_ibfk_1")
+
+  @@index([roomID], map: "roomID")
 }

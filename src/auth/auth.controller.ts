@@ -18,9 +18,20 @@ import {
 
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBasicAuth,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiProperty,
+  ApiQuery,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
 import { user } from '@prisma/client';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { diskStorage } from 'multer';
 import {
   dataRequire,
@@ -29,7 +40,7 @@ import {
   signProperty,
 } from 'src/utilities/validation';
 import { AuthService } from './auth.service';
-import { resultUpload, token, userLogin } from './dto';
+import { resultUpload, token, userLogin, userSign } from './dto';
 @ApiTags('User')
 @Controller('/api/auth')
 export class AuthController {
@@ -37,10 +48,12 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/user')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get data all user (Admin)' })
   getUser(): Promise<user[]> {
     return this.authService.getUser();
   }
   @Post('/login')
+  @ApiOperation({ summary: 'User login' })
   login(@Body() body: userLogin): Promise<user & token> {
     if (dataRequire(body, loginProperty)) {
       throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
@@ -48,7 +61,8 @@ export class AuthController {
     return this.authService.login(body);
   }
   @Post('/sign')
-  signUp(@Body() body: user): Promise<user> {
+  @ApiOperation({ summary: 'User sign up' })
+  signUp(@Body() body: userSign): Promise<user> {
     if (dataRequire(body, signProperty)) {
       throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
     }
@@ -57,32 +71,42 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/user/:id')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get data user by id' })
   getUserById(@Param('id') id: string): Promise<user> {
     return this.authService.getUserById(Number(id));
   }
   @UseGuards(AuthGuard('jwt'))
   @Put('/user/:id')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user by ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+    },
+  })
   update(@Body() body: user, @Param('id') id: string): Promise<user> {
     return this.authService.updateUser(body, Number(id));
   }
-  @UseGuards(AuthGuard('admin'))
+  @UseGuards(AuthGuard('jwt'))
   @Delete('/user/:id')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete user by ID' })
   deleteUser(@Param('id') id: string): Promise<{ message: string }> {
     return this.authService.deleteUser(id);
   }
-  @Post('/search')
+  @Get('/search')
   @ApiBearerAuth()
-  searchUser(@Query() data) {
-    return this.authService.searchUser(data);
+  @ApiOperation({ summary: 'Search user' })
+  searchUser(@Query('name') name: string): Promise<user[]> {
+    return this.authService.searchUser(name);
   }
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: 8000 },
+      limits: { fileSize: 10487560 },
       storage: diskStorage({
         destination: './public/avatar',
         filename(req, file, callback) {
+          console.log('file: ', file);
           let fileName = Date.now() + file.originalname;
           callback(null, fileName);
         },
@@ -99,9 +123,22 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Post('/upload/:id')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload avatar user' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   upload(
-    @UploadedFile() file,
-    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
     @Param('id') id: string,
   ): Promise<resultUpload> {
     if (!file) {

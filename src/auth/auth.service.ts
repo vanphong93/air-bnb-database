@@ -53,21 +53,9 @@ export class AuthService {
     const { email } = body;
     const checkEmail = await this.prisma.user.findFirst({ where: { email } });
     if (checkEmail) {
-      throw new ConflictException(email, 'email is already exists');
+      throw new ConflictException(email, 'Email is already exists');
     }
-
     const clientData = await this.prisma.user.create({ data: body });
-    // .then((data) => {
-    //   return { ...data };
-    // })
-    // .catch((data) => {
-    //   console.log('data: ', data);
-
-    //   return data;
-    //   // console.log('err: ', err);
-    //   // throw new InternalServerErrorException();
-    // });
-
     return clientData;
   }
   async getUserById(userID: number): Promise<user> {
@@ -125,7 +113,7 @@ export class AuthService {
       });
     return result;
   }
-  async searchUser({ name }) {
+  async searchUser(name: string): Promise<user[]> {
     const result = await this.prisma.user
       .findMany({ where: { name } })
       .then((data) => {
@@ -143,7 +131,7 @@ export class AuthService {
   async uploadAvatar(
     id: number,
     url: string,
-    fileName: string
+    fileName: string,
   ): Promise<resultUpload> {
     const fs = require('fs');
     const fullUrl = url + fileName;

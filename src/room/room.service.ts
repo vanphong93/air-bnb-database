@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient, room } from '@prisma/client';
+import { imageRoom, PrismaClient, room } from '@prisma/client';
+import { Response } from 'express';
 import {
   checkEmpty,
   dataRequire,
   roomProperty,
 } from 'src/utilities/validation';
+import { createBedRoom } from './dto';
 
 @Injectable()
 export class RoomService {
@@ -19,15 +21,20 @@ export class RoomService {
   private prisma: PrismaClient = new PrismaClient();
   async getAllRoom(): Promise<room[]> {
     const result = await this.prisma.room.findMany({
-      include: { imageRoom: { select: { url: true } } },
+      include: {
+        imageRoom: { select: { url: true, imageID: true } },
+        bedRoom: {
+          select: { bedID: true, imageBed: true, guest: true, bed: true },
+        },
+      },
     });
     return result;
   }
-  async getDataByID(id: number) {
+  async getDataByID(id: number): Promise<room> {
     const result = await this.prisma.room
       .findFirst({
         where: { roomID: id },
-        include: { imageRoom: { select: { url: true } } },
+        include: { imageRoom: { select: { url: true } }, bedRoom: true },
       })
       .then((data) => {
         if (!data) {
@@ -42,12 +49,6 @@ export class RoomService {
       throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
     }
     const result = await this.prisma.room.create({ data: body });
-    // .then((data) => {
-    //   return { ...data };
-    // })
-    // .catch(() => {
-    //   throw new InternalServerErrorException();
-    // });
     return result;
   }
   async uploadImage(id: number, url: string, data) {
@@ -74,7 +75,12 @@ export class RoomService {
     }
     return result;
   }
-  async deleteImg(id: number, splitURL: string) {
+  async deleteImg(
+    id: number,
+    splitURL: string,
+  ): Promise<{
+    message: string;
+  }> {
     const fs = require('fs');
     const result = await this.prisma.imageRoom
       .delete({
@@ -97,7 +103,11 @@ export class RoomService {
       });
     return result;
   }
-  imageRoom(fileName: string, res) {
+  // async allImageRoom(): Promise<imageRoom[]> {
+  //   const result = await this.prisma.imageRoom.findMany();
+  //   return result;
+  // }
+  imageRoom(fileName: string, res: Response) {
     let url = `${process.cwd()}/public/img/${fileName}`;
     res.sendFile(url, (err) => {
       if (err) {
@@ -106,5 +116,12 @@ export class RoomService {
         res.status(200).end();
       }
     });
+  }
+  async createBedRoom(body: createBedRoom): Promise<createBedRoom> {
+    const reuslt = await this.prisma.bedRoom.create({
+      data: { ...body },
+    });
+
+    return reuslt;
   }
 }

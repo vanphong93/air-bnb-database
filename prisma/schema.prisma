@@ -17,41 +17,20 @@ model user {
   gender    Boolean?
   role      Boolean?  @default(false)
   avatar    String?   @db.VarChar(255)
-}
-
-model imageRoom {
-  roomID  Int
-  imageID Int    @id @default(autoincrement())
-  url     String @db.VarChar(255)
-  room    room   @relation(fields: [roomID], references: [roomID], onDelete: NoAction, onUpdate: NoAction, map: "imageRoom_ibfk_1")
-
-  @@index([roomID], map: "roomID")
+  comment   comment[]
 }
 
 model room {
-  roomID       Int         @id @default(autoincrement())
-  positionID   Int
-  name         String      @db.VarChar(255)
-  bath         Int
-  description  String      @db.VarChar(255)
-  air          Boolean?    @default(false)
-  iron         Boolean?    @default(false)
-  tv           Boolean?    @default(false)
-  wifi         Boolean?    @default(false)
-  kitchen      Boolean?    @default(false)
-  park         Boolean?    @default(false)
-  coffe        Boolean?    @default(false)
-  refrigerator Boolean?    @default(false)
-  address      String      @db.VarChar(255)
-  hostName     String      @db.VarChar(255)
-  phone        Int
-  lng          Float?      @db.Float
-  lat          Float?      @db.Float
-  bedRoom      bedRoom[]
-  imageRoom    imageRoom[]
-  position     position    @relation(fields: [positionID], references: [positionID], onDelete: NoAction, onUpdate: NoAction, map: "room_ibfk_1")
+  roomID    Int     @id @default(autoincrement())
+  nameRoom  String  @db.VarChar(255)
+  imageRoom String? @db.VarChar(255)
+  guest     Int
+  bed       Int
+  price     Int
+  hostID    Int
+  host      host    @relation(fields: [hostID], references: [hostID], onDelete: NoAction, onUpdate: NoAction, map: "room_ibfk_1")
 
-  @@index([positionID], map: "positionID")
+  @@index([hostID], map: "hostID")
 }
 
 model position {
@@ -62,17 +41,54 @@ model position {
   image      String? @db.VarChar(255)
   lng        Float?  @db.Float
   lat        Float?  @db.Float
-  room       room[]
+  host       host[]
 }
 
-model bedRoom {
-  bedID    Int     @id @default(autoincrement())
-  roomID   Int?
-  imageBed String? @db.VarChar(255)
-  guest    Int
-  bed      Int
-  price    Int
-  room     room?   @relation(fields: [roomID], references: [roomID], onDelete: NoAction, onUpdate: NoAction, map: "bedRoom_ibfk_1")
+model host {
+  hostID       Int         @id @default(autoincrement())
+  address      String      @db.VarChar(255)
+  hostName     String      @db.VarChar(255)
+  phone        Int
+  bath         Int
+  description  String      @db.VarChar(255)
+  air          Boolean?    @default(false)
+  iron         Boolean?    @default(false)
+  tv           Boolean?    @default(false)
+  wifi         Boolean?    @default(false)
+  kitchen      Boolean?    @default(false)
+  park         Boolean?    @default(false)
+  coffe        Boolean?    @default(false)
+  refrigerator Boolean?    @default(false)
+  lng          Float?      @db.Float
+  lat          Float?      @db.Float
+  positionID   Int
+  comment      comment[]
+  position     position    @relation(fields: [positionID], references: [positionID], onDelete: NoAction, onUpdate: NoAction, map: "host_ibfk_1")
+  imageHost    imageHost[]
+  room         room[]
 
-  @@index([roomID], map: "roomID")
+  @@index([positionID], map: "positionID")
+}
+
+model imageHost {
+  imageID Int    @id @default(autoincrement())
+  url     String @db.VarChar(255)
+  hostID  Int
+  host    host   @relation(fields: [hostID], references: [hostID], onDelete: NoAction, onUpdate: NoAction, map: "imageHost_ibfk_1")
+
+  @@index([hostID], map: "hostID")
+}
+
+model comment {
+  commentID   Int       @id @default(autoincrement())
+  content     String    @db.VarChar(255)
+  dateCreated DateTime? @db.DateTime(0)
+  rate        Int?      @default(5)
+  userID      Int
+  hostID      Int
+  user        user      @relation(fields: [userID], references: [userID], onDelete: NoAction, onUpdate: NoAction, map: "comment_ibfk_1")
+  host        host      @relation(fields: [hostID], references: [hostID], onDelete: NoAction, onUpdate: NoAction, map: "comment_ibfk_2")
+
+  @@index([userID], map: "userID")
+  @@index([hostID], map: "hostID")
 }

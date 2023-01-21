@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   Res,
   UploadedFile,
@@ -27,44 +28,75 @@ import {
   ApiExcludeEndpoint,
   ApiHideProperty,
   ApiOAuth2,
+  ApiOkResponse,
   ApiOperation,
   ApiPropertyOptional,
+  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { bedRoom, imageRoom, room } from '@prisma/client';
+import { room } from '@prisma/client';
 import { Request, Response } from 'express';
 import { diskStorage } from 'multer';
+import { decoratorConfig } from 'src/decorators/decorators';
 import { dataRequire, mimetypeImage } from 'src/utilities/validation';
-import { createBedRoom } from './dto';
+import { createRoom, resultCreateRoom } from './dto';
+
 import { RoomService } from './room.service';
 @ApiTags('Room')
 @Controller('api/room')
 export class RoomController {
   constructor(private roomService: RoomService) {}
   @Get()
-  @ApiOperation({ summary: 'Get data all room' })
+  @decoratorConfig(null, 'get data all room', 'success', resultCreateRoom, 200)
   getData(): Promise<room[]> {
-    return this.roomService.getAllRoom();
+    return this.roomService.getData();
   }
   @Post()
-  @ApiOperation({ summary: 'Craete room' })
-  createRoom(@Body() body: room): Promise<room> {
+  @decoratorConfig(null, 'create room', 'success', resultCreateRoom, 201)
+  createRoom(@Body() body: createRoom): Promise<room> {
     return this.roomService.createRoom(body);
   }
   @Get('/:id')
-  @ApiOperation({ summary: 'Get data room by room ID' })
+  @decoratorConfig(
+    null,
+    'get data room by ID',
+    'success',
+    resultCreateRoom,
+    200,
+  )
   getDataByID(@Param('id') id: string): Promise<room> {
     return this.roomService.getDataByID(Number(id));
+  }
+  @Delete('/:id')
+  @decoratorConfig(null, 'delete room by ID', 'success', resultCreateRoom, 201)
+  deleteRoom(@Param('id') id: string): Promise<room> {
+    return this.roomService.deleteRoom(Number(id));
+  }
+  @Put('/:id')
+  @decoratorConfig(
+    null,
+    'update data room by ID',
+    'success',
+    resultCreateRoom,
+    200,
+  )
+  @ApiBody({
+    schema: {
+      type: 'object',
+    },
+  })
+  updateRoom(@Param('id') id: string, @Body() body): Promise<room> {
+    return this.roomService.updateRoom(Number(id), body);
   }
   // @Get('/image/all')
   // getDataImg(): Promise<imageRoom[]> {
   //   return this.roomService.allImageRoom();
   // }
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'file', maxCount: 3 }], {
+    FileInterceptor('file', {
       storage: diskStorage({
-        destination: './public/img',
+        destination: './public/imgRoom',
         filename(req, file, callback) {
           let fileName = Date.now() + file.originalname;
           callback(null, fileName);
@@ -72,7 +104,7 @@ export class RoomController {
       }),
     }),
   )
-  @Post('/image/:id')
+  @Post('/image-room/:id')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -85,48 +117,23 @@ export class RoomController {
       },
     },
   })
-  @ApiOperation({ summary: 'Create image room' })
-  upload(@UploadedFiles() data, @Req() req: Request, @Param('id') id: string) {
-    const Url = req.protocol + '://' + req.get('host') + '/api/room/image/';
-    return this.roomService.uploadImage(Number(id), Url, data);
-  }
-  @Delete('/image/:id')
-  @ApiOperation({ summary: 'Delete image room' })
-  deleteImgRoom(
+
+  upload(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
     @Param('id') id: string,
-    @Req() req,
-  ): Promise<{
-    message: string;
-  }> {
-    let splitURL = req.protocol + '://' + req.get('host') + '/api/room/image/';
-    return this.roomService.deleteImg(Number(id), splitURL);
+  ) {
+    const Url =
+      req.protocol + '://' + req.get('host') + '/api/room/image-room/';
+    const fileName: string = file.filename;
+    return this.roomService.uploadImage(Number(id), Url, fileName);
   }
-  @Get('/image/:fileName')
-  // @ApiExcludeEndpoint()
-  showImg(@Param('fileName') fileName: string, @Res() res:Response) {
+
+  @Get('/image-room/:fileName')
+  @ApiExcludeEndpoint()
+  showImg(@Param('fileName') fileName: string, @Res() res: Response) {
     return this.roomService.imageRoom(fileName, res);
   }
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: 10487560 },
-      storage: diskStorage({
-        destination: './public/bedRoom',
-        filename(req, file, callback) {
-          let fileName = Date.now() + file.originalname;
-          callback(null, fileName);
-        },
-      }),
-      fileFilter(req, file, callback) {
-        if (!mimetypeImage.includes(file.mimetype)) {
-          callback(null, false);
-        } else {
-          callback(null, true);
-        }
-      },
-    }),
-  )
-  @Post('/bed-room')
-  createBedRoom(@Body() body: createBedRoom): Promise<createBedRoom> {
-    return this.roomService.createBedRoom(body);
-  }
+
+  
 }

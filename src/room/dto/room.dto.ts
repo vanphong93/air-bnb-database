@@ -1,15 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiOkResponse, ApiProperty } from '@nestjs/swagger';
 
-export class createBedRoom {
-  bedID: number;
+export class createRoom {
+  // roomID: number
   @ApiProperty()
-  roomID: number;
-  @ApiProperty({ required: false })
-  imageBed: string | null;
+  nameRoom: string;
+  @ApiProperty()
+  imageRoom: string;
   @ApiProperty()
   guest: number;
   @ApiProperty()
   bed: number;
   @ApiProperty()
   price: number;
+  @ApiProperty()
+  hostID: number;
+}
+export class resultCreateRoom extends createRoom {
+  @ApiProperty()
+  roomID: number;
 }

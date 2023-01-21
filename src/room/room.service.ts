@@ -6,109 +6,87 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { imageRoom, PrismaClient, room } from '@prisma/client';
+import { PrismaClient, room } from '@prisma/client';
 import { Response } from 'express';
 import {
   checkEmpty,
   dataRequire,
   roomProperty,
 } from 'src/utilities/validation';
-import { createBedRoom } from './dto';
+import { createRoom } from './dto';
+// import { createBedRoom } from './dto';
 
 @Injectable()
 export class RoomService {
   constructor(private config: ConfigService, private jwt: JwtService) {}
   private prisma: PrismaClient = new PrismaClient();
-  async getAllRoom(): Promise<room[]> {
-    const result = await this.prisma.room.findMany({
-      include: {
-        imageRoom: { select: { url: true, imageID: true } },
-        bedRoom: {
-          select: { bedID: true, imageBed: true, guest: true, bed: true },
-        },
-      },
-    });
+  async getData(): Promise<room[]> {
+    const result = await this.prisma.room.findMany();
     return result;
   }
   async getDataByID(id: number): Promise<room> {
-    const result = await this.prisma.room
-      .findFirst({
-        where: { roomID: id },
-        include: { imageRoom: { select: { url: true } }, bedRoom: true },
-      })
-      .then((data) => {
-        if (!data) {
-          throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-        }
-        return { ...data };
-      });
+    const result = await this.prisma.room.findFirst({
+      where: { roomID: id },
+    });
+
     return result;
   }
-  async createRoom(body: room): Promise<room> {
+  async deleteRoom(id: number): Promise<room> {
+    const result = await this.prisma.room.delete({
+      where: { roomID: id },
+    });
+
+    return result;
+  }
+  async updateRoom(id: number, body): Promise<room> {
+    const result = await this.prisma.room.update({
+      where: { roomID: id },
+      data: body,
+    });
+
+    return result;
+  }
+  async createRoom(body: createRoom): Promise<room> {
     if (dataRequire(body, roomProperty)) {
       throw new HttpException('Data wrong', HttpStatus.BAD_REQUEST);
     }
     const result = await this.prisma.room.create({ data: body });
     return result;
   }
-  async uploadImage(id: number, url: string, data) {
-    const file = data.file;
-    const result = [];
+  async uploadImage(id: number, url: string, fileName: string) {
+    const fs = require('fs');
+    const fullUrl = url + fileName;
+    const link = process.cwd() + '/public/imgRoom/' + fileName;
     const checkRoom = await this.prisma.room.findFirst({
       where: { roomID: id },
     });
     if (checkRoom) {
-      for (let index = 0; index < file.length; index++) {
-        const fileName = file[index].filename;
-        const fullUrl = url + fileName;
-        await this.prisma.imageRoom
-          .create({
-            data: {
-              roomID: id,
-              url: fullUrl,
-            },
-          })
-          .then((data) => {
-            result.push(data);
-          });
-      }
+      let { imageRoom } = checkRoom;
+      const data = await this.prisma.room
+        .update({
+          where: { roomID: id },
+          data: { imageRoom: fullUrl },
+        })
+        .then((data) => {
+          imageRoom = imageRoom.replace(url, '');
+          const remove = process.cwd() + '/public/imgRoom/' + imageRoom;
+          setTimeout(() => {
+            fs.unlink(remove, () => null);
+          }, 3000);
+          return data;
+        })
+        .catch(() => {
+          fs.unlinkSync(link);
+          throw new HttpException('Failed', HttpStatus.BAD_REQUEST);
+        });
+      return data;
     }
-    return result;
+    fs.unlinkSync(link);
+    throw new HttpException('not exist', null);
   }
-  async deleteImg(
-    id: number,
-    splitURL: string,
-  ): Promise<{
-    message: string;
-  }> {
-    const fs = require('fs');
-    const result = await this.prisma.imageRoom
-      .delete({
-        where: { imageID: id },
-      })
-      .then((data) => {
-        let { url: URL } = data;
-        URL = URL.replace(splitURL, '');
-        setTimeout(() => {
-          fs.unlink(process.cwd() + '/public/img/' + URL, (err) => {
-            return;
-          });
-        }, 3000);
-        return {
-          message: 'success',
-        };
-      })
-      .catch(() => {
-        throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-      });
-    return result;
-  }
-  // async allImageRoom(): Promise<imageRoom[]> {
-  //   const result = await this.prisma.imageRoom.findMany();
-  //   return result;
-  // }
+  
   imageRoom(fileName: string, res: Response) {
-    let url = `${process.cwd()}/public/img/${fileName}`;
+    let url = `${process.cwd()}/public/imgRoom/${fileName}`;
     res.sendFile(url, (err) => {
       if (err) {
         res.status(404).send('Not found');
@@ -117,11 +95,5 @@ export class RoomService {
       }
     });
   }
-  async createBedRoom(body: createBedRoom): Promise<createBedRoom> {
-    const reuslt = await this.prisma.bedRoom.create({
-      data: { ...body },
-    });
 
-    return reuslt;
-  }
 }

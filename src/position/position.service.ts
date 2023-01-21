@@ -5,6 +5,7 @@ import { position, PrismaClient } from '@prisma/client';
 import { Response } from 'express';
 import { toLowerCaseNonAccentVietnamese } from 'src/utilities/coverString';
 import { locationVN } from 'src/utilities/dataLocation';
+import { createPosition } from './dto';
 
 @Injectable()
 export class PositionService {
@@ -14,12 +15,11 @@ export class PositionService {
     const result = await this.prisma.position.findMany();
     return result;
   }
-  async createPostion(data: position) {
+  async createPostion(data: createPosition): Promise<position> {
     const result = await this.prisma.position.create({ data });
     return result;
   }
   async uploadImage(id: number, url, fileName) {
-    console.log('id: ', id);
     const fs = require('fs');
     const fullUrl = url + fileName;
     const link = process.cwd() + '/public/position/' + fileName;
@@ -61,6 +61,7 @@ export class PositionService {
   }
   searchInfo(search) {
     let { location } = search;
+
     const result = locationVN.filter((item) => {
       return (
         toLowerCaseNonAccentVietnamese(item.city) ===

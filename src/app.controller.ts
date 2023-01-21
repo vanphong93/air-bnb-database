@@ -8,13 +8,4 @@ export class AppController {
     private readonly appService: AppService,
     private config: ConfigService,
   ) {}
-
-  // @Get('/get')
-  // getUser(): any {
-  //   return this.appService.getUser();
-  // }
-  // @Get()
-  // getHello(): string {
-  //   return this.appService.getHello();
-  // }
 }

@@ -1,12 +1,20 @@
 export const roomProperty = [
-  'positionID',
-  'name',
-  'bath',
-  'description',
+  'hostID',
+  'nameRoom',
+  'guest',
+  'bed',
+  'price',
+  'hostID',
+];
+export const hostProperty = [
   'hostName',
   'phone',
+  'bath',
   'address',
+  'description',
+  'positionID',
 ];
+export const positionProperty = ['name', 'city', 'country'];
 export const signProperty = ['passWord', 'name', 'email'];
 export const loginProperty = ['passWord', 'email'];
 export function dataRequire(object: Object, property: Array<string>): boolean {

@@ -14,22 +14,23 @@ import {
   dataRequire,
   signProperty,
 } from 'src/utilities/validation';
-import { resultLogin, resultUpload, token, userLogin } from './dto';
+import { resultLogin, resultUpload, userLogin, userSign } from './dto';
 
 @Injectable()
 export class AuthService {
   constructor(private config: ConfigService, private jwt: JwtService) {}
   private prisma: PrismaClient = new PrismaClient();
   async getUser(): Promise<user[]> {
-    const result = await this.prisma.user.findMany().then((data) => {
-      data.forEach((item) => {
-        item.passWord = '';
-      });
-      return data;
-    });
+    const result = await this.prisma.user.findMany();
+    // .then((data) => {
+    //   data.forEach((item) => {
+    //     item.passWord = '';
+    //   });
+    //   return data;
+    // });
     return result;
   }
-  async login({ email, passWord }: userLogin): Promise<user & token> {
+  async login({ email, passWord }: userLogin): Promise<resultLogin> {
     const checkUser = await this.prisma.user.findFirst({
       where: { email },
     });
@@ -49,82 +50,93 @@ export class AuthService {
     }
     throw new HttpException('Email is not found', HttpStatus.NOT_FOUND);
   }
-  async signUp(body: user): Promise<user> {
-    const { email } = body;
-    const checkEmail = await this.prisma.user.findFirst({ where: { email } });
-    if (checkEmail) {
-      throw new ConflictException(email, 'Email is already exists');
-    }
+  async signUp(body: userSign): Promise<user> {
+    // const { email } = body;
+    // const checkEmail = await this.prisma.user.findFirst({ where: { email } });
+    // if (checkEmail) {
+    //   throw new ConflictException(email, 'Email is already exists');
+    // }
     const clientData = await this.prisma.user.create({ data: body });
     return clientData;
   }
   async getUserById(userID: number): Promise<user> {
-    const result = await this.prisma.user
-      .findFirst({ where: { userID } })
-      .then((data) => {
-        if (!data) {
-          throw new HttpException('not found', HttpStatus.NOT_FOUND);
-        }
-        return { ...data, passWord: '' };
-      });
+    const result = await this.prisma.user.findFirst({ where: { userID } });
+    // console.log('result: ', result);
+    // .then((data) => {
+    //   if (!data) {
+    //     throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    //   }
+    //   return { ...data, passWord: '' };
+    // });
     return result;
   }
-  async updateUser(body: user, id: number): Promise<user> {
-    const checkUser = await this.prisma.user.findUnique({
+  async updateUser(body: any, id: number): Promise<user> {
+    // const checkUser = await this.prisma.user.findUnique({
+    //   where: { userID: id },
+    // });
+
+    // if (checkUser) {
+    //   const { email: newEmail } = body;
+    //   if (checkUser.email != newEmail && newEmail) {
+    //     const checkEmail = await this.prisma.user.findFirst({
+    //       where: { email: newEmail },
+    //     });
+    //     if (checkEmail) {
+    //       throw new ConflictException(newEmail, 'email is already exists');
+    //     }
+    //   }
+    //   const clientData = await this.prisma.user
+    //     .update({
+    //       where: { userID: id },
+    //       data: body,
+    //     })
+    //     .then((data) => {
+    //       return { ...data };
+    //     })
+    //     .catch(() => {
+    //       throw new InternalServerErrorException();
+    //     });
+
+    //   return clientData;
+    // }
+    // throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    const clientData = await this.prisma.user.update({
       where: { userID: id },
+      data: body,
+    });
+    // .then((data) => {
+    //   return { ...data };
+    // })
+    // .catch(() => {
+    //   throw new InternalServerErrorException();
+    // });
+
+    return clientData;
+  }
+  async deleteUser(id: string): Promise<user> {
+    const result = await this.prisma.user.delete({
+      where: { userID: Number(id) },
     });
 
-    if (checkUser) {
-      const { email: newEmail } = body;
-      if (checkUser.email != newEmail && newEmail) {
-        const checkEmail = await this.prisma.user.findFirst({
-          where: { email: newEmail },
-        });
-        if (checkEmail) {
-          throw new ConflictException(newEmail, 'email is already exists');
-        }
-      }
-      const clientData = await this.prisma.user
-        .update({
-          where: { userID: id },
-          data: body,
-        })
-        .then((data) => {
-          return { ...data };
-        })
-        .catch(() => {
-          throw new InternalServerErrorException();
-        });
-
-      return clientData;
-    }
-    throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-  }
-  async deleteUser(id: string): Promise<{ message: string }> {
-    const result = await this.prisma.user
-      .delete({
-        where: { userID: Number(id) },
-      })
-      .then(() => ({
-        message: 'success',
-      }))
-      .catch(() => {
-        throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-      });
+    // .then(() => ({
+    //   message: 'success',
+    // }));
+    // .catch(() => {
+    //   throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    // });
     return result;
   }
   async searchUser(name: string): Promise<user[]> {
-    const result = await this.prisma.user
-      .findMany({ where: { name } })
-      .then((data) => {
-        if (!data.length) {
-          throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-        }
-        data.forEach((item) => {
-          item.passWord = '';
-        });
-        return data;
-      });
+    const result = await this.prisma.user.findMany({ where: { name } });
+    // .then((data) => {
+    //   if (!data.length) {
+    //     throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    //   }
+    //   data.forEach((item) => {
+    //     item.passWord = '';
+    //   });
+    //   return data;
+    // });
 
     return result;
   }
@@ -161,7 +173,7 @@ export class AuthService {
       return data;
     }
     fs.unlinkSync(link);
-    throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    throw new HttpException('not exist', null);
   }
   avatar(fileName: string, res: Response) {
     let url = `${process.cwd()}/public/avatar/${fileName}`;

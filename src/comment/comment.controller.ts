@@ -14,7 +14,7 @@ export class CommentController {
     return this.commentService.getData();
   }
   @Post('')
-  @decoratorConfig(null, 'create comment', 'success', dataComment, 200)
+  @decoratorConfig('jwt', 'create comment', 'success', dataComment, 200)
   createComment(@Body() body: createComment) {
     return this.commentService.createComment(body);
   }
@@ -25,7 +25,7 @@ export class CommentController {
   }
   @Delete('/:id')
   @decoratorConfig(
-    null,
+    "jwt",
     'delete comment by id comment',
     'success',
     dataComment,

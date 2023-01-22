@@ -8,27 +8,29 @@ datasource db {
 }
 
 model user {
-  userID    Int       @id @default(autoincrement())
-  name      String    @db.VarChar(255)
-  passWord  String    @db.VarChar(255)
-  email     String    @unique(map: "email") @db.VarChar(255)
-  phone     Int?
-  birthDate DateTime? @db.Date
-  gender    Boolean?
-  role      Boolean?  @default(false)
-  avatar    String?   @db.VarChar(255)
-  comment   comment[]
+  userID      Int           @id @default(autoincrement())
+  name        String        @db.VarChar(255)
+  passWord    String        @db.VarChar(255)
+  email       String        @unique(map: "email") @db.VarChar(255)
+  phone       Int?
+  birthDate   DateTime?     @db.Date
+  gender      Boolean?
+  role        Boolean?      @default(false)
+  avatar      String?       @db.VarChar(255)
+  comment     comment[]
+  reservation reservation[]
 }
 
 model room {
-  roomID    Int     @id @default(autoincrement())
-  nameRoom  String  @db.VarChar(255)
-  imageRoom String? @db.VarChar(255)
-  guest     Int
-  bed       Int
-  price     Int
-  hostID    Int
-  host      host    @relation(fields: [hostID], references: [hostID], onDelete: NoAction, onUpdate: NoAction, map: "room_ibfk_1")
+  roomID      Int           @id @default(autoincrement())
+  nameRoom    String        @db.VarChar(255)
+  imageRoom   String?       @db.VarChar(255)
+  guest       Int
+  bed         Int
+  price       Int
+  hostID      Int
+  reservation reservation[]
+  host        host          @relation(fields: [hostID], references: [hostID], onDelete: NoAction, onUpdate: NoAction, map: "room_ibfk_1")
 
   @@index([hostID], map: "hostID")
 }
@@ -91,4 +93,18 @@ model comment {
 
   @@index([userID], map: "userID")
   @@index([hostID], map: "hostID")
+}
+
+model reservation {
+  reserID  Int      @id @default(autoincrement())
+  startDay DateTime @db.DateTime(0)
+  endDay   DateTime @db.DateTime(0)
+  guest    Int
+  roomID   Int
+  userID   Int
+  room     room     @relation(fields: [roomID], references: [roomID], onDelete: NoAction, onUpdate: NoAction, map: "reservation_ibfk_1")
+  user     user     @relation(fields: [userID], references: [userID], onDelete: NoAction, onUpdate: NoAction, map: "reservation_ibfk_2")
+
+  @@index([roomID], map: "roomID")
+  @@index([userID], map: "userID")
 }

@@ -54,7 +54,7 @@ export class HostController {
     return this.hostService.getDataById(Number(id));
   }
   @Put('/:id')
-  @decoratorConfig(null, 'update host by id', 'success', resultPost, 201)
+  @decoratorConfig('jwt', 'update host by id', 'success', resultPost, 201)
   @ApiBody({
     schema: {
       type: 'object',
@@ -64,7 +64,7 @@ export class HostController {
     return this.hostService.updateHost(Number(id), body);
   }
   @Delete('/:id')
-  @decoratorConfig(null, 'delete host by id', 'success', resultPost, 200)
+  @decoratorConfig('admin', 'delete host by id (token by admin)', 'success', resultPost, 200)
   deleteHost(@Param('id') id: string): Promise<resultPost> {
     return this.hostService.deleteHost(Number(id));
   }
@@ -103,7 +103,7 @@ export class HostController {
       req.protocol + '://' + req.get('host') + '/api/host/image-host/';
     return this.hostService.uploadImage(Number(id), Url, file);
   }
-  @decoratorConfig(null, 'delete image host', 'success', null, 200)
+  @decoratorConfig('jwt', 'delete image host', 'success', null, 200)
   @Delete('/image-host/:id')
   deleteImage(
     @Param('id') id: string,

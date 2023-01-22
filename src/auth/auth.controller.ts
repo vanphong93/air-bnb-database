@@ -25,7 +25,7 @@ import {
 import { user } from '@prisma/client';
 import { Request, Response } from 'express';
 import { diskStorage } from 'multer';
-import { NotFoundError } from 'rxjs';
+
 import { decoratorConfig } from 'src/decorators/decorators';
 import {
   dataRequire,
@@ -47,7 +47,7 @@ import {
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Get('/user')
-  @decoratorConfig('jwt', 'Get data all user (Admin)', 'Success', [resultSign],200)
+  @decoratorConfig('jwt', 'Get data all user', 'Success', [resultSign],200)
   getUser(): Promise<user[]> {
     return this.authService.getUser();
   }
@@ -85,7 +85,7 @@ export class AuthController {
     return this.authService.updateUser(body, Number(id));
   }
   @Delete('/user/:id')
-  @decoratorConfig('jwt', 'Delete user by ID', 'Success', resultSign,200)
+  @decoratorConfig('admin', 'Delete user by ID (token by admin)', 'Success', resultSign,200)
   deleteUser(@Param('id') id: string): Promise<user> {
     return this.authService.deleteUser(id);
   }

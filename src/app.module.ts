@@ -8,6 +8,8 @@ import { PositionModule } from './position/position.module';
 import { HostModule } from './host/host.module';
 import { CommentModule } from './comment/comment.module';
 
+import { ReservationModule } from './reservation/reservation.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -16,6 +18,7 @@ import { CommentModule } from './comment/comment.module';
     RoomModule,
     PositionModule,
     CommentModule,
+    ReservationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
